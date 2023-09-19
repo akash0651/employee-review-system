@@ -1,13 +1,11 @@
-
 const User = require('../models/users');
 const Review = require('../models/review');
 
-
-
+// Function to create a new user
 module.exports.create = function (req, res) {
     if (req.body.password != req.body.confirm_password) {
-        req.flash('error', 'Incorrect Password')
-        return res.redirect('back')
+        req.flash('error', 'Incorrect Password');
+        return res.redirect('back');
     }
 
     User.findOne({ email: req.body.email }, function (err, user) {
@@ -15,9 +13,9 @@ module.exports.create = function (req, res) {
             console.log("error in finding user in signing up");
             return;
         }
-        // console.log('find one -> ',user)
 
         if (!user) {
+            // Create a new user if they do not exist
             User.create({
                 name: req.body.name,
                 email: req.body.email,
@@ -28,46 +26,23 @@ module.exports.create = function (req, res) {
                     console.log("error in creating user while signing up");
                     return;
                 }
-                // console.log('create -> ',user)
-                req.flash('success', 'Sign Up Successfull')
-                return res.redirect('/')
-            })
+                req.flash('success', 'Sign Up Successful');
+                return res.redirect('/');
+            });
         } else {
-            // console.log(user);
+            // Redirect back to the signup page if the user already exists
             return res.redirect('back');
         }
-    })
+    });
 }
 
-
-
-
+// Function to create a user session (login)
 module.exports.createSession = function (req, res) {
     req.flash('success', 'Logged In Successfully');
     return res.redirect('/');
 }
 
-
-// module.exports.destroySession = function(req, res,next){
-//     // req.logout();
-//     // req.flash('success','Logged Out Successfully');
-//     // return res.redirect('/users/sign-in');
-
-//     if (req.session) {
-//         // delete session object
-//         req.session.destroy(function (err) {
-//           if (err) {
-//             return next(err);
-//           } else {
-//             // req.flash('success','Logged Out Successfully');
-//             return res.redirect('/users/sign-in');
-//             // return res.redirect('/');
-//           }
-//         });
-//       }
-// }
-
-
+// Function to destroy a user session (logout)
 module.exports.destroySession = function (req, res, next) {
     req.logout(function (err) {
         if (err) {
@@ -75,28 +50,11 @@ module.exports.destroySession = function (req, res, next) {
         }
         req.flash('success', 'Logged Out Successfully');
         return res.redirect('/users/sign-in');
-        //   res.redirect('/');
     });
-    // req.flash('success','Logged Out Successfully');
 }
 
-
-// app.get('/logout',  function (req, res, next)  {
-//     if (req.session) {
-//       // delete session object
-//       req.session.destroy(function (err) {
-//         if (err) {
-//           return next(err);
-//         } else {
-//           return res.redirect('/');
-//         }
-//       });
-//     }
-//   });
-
-
+// Function to render the sign-in page
 module.exports.signIn = function (req, res) {
-
     if (req.isAuthenticated()) {
         return res.render('home', {
             title: "Home"
@@ -107,10 +65,8 @@ module.exports.signIn = function (req, res) {
     });
 }
 
-
-
+// Function to render the sign-up page
 module.exports.signUp = function (req, res) {
-
     if (req.isAuthenticated() && req.user.isAdmin) {
         return res.render('user_sign_up', {
             title: "Sign Up"
@@ -126,12 +82,10 @@ module.exports.signUp = function (req, res) {
     return res.render('user_sign_up', {
         title: "Sign Up"
     });
-
 }
 
-// home
+// Function to render the home page
 module.exports.home = async function (req, res) {
-
     try {
         if (!req.isAuthenticated()) {
             return res.redirect('/users/sign-in');
@@ -139,29 +93,22 @@ module.exports.home = async function (req, res) {
 
         let user = await User.findById(req.user.id);
         let review = await Review.find({ to: req.user.id });
-
-
         let recipients = [];
 
         for (let i = 0; i < user.to.length; i++) {
             let x = await User.findById(user.to[i]);
             if (x) {
                 recipients.push({
-                    id: x._id, // Assuming 'x' has an '_id' property
+                    id: x._id,
                     name: x.name
-                    // Add other properties if needed
                 });
             }
         }
 
-
-        // find reviews
         let reviews = [];
 
         for (let i = 0; i < review.length; i++) {
             let x = await User.findById(review[i].from);
-
-
             let curr_review = {
                 name: x.name,
                 review: review[i].review,
@@ -181,5 +128,4 @@ module.exports.home = async function (req, res) {
         console.log(error);
         return;
     }
-
 }

@@ -4,35 +4,35 @@ const Review = require('../models/review');
 
 
 
-module.exports.create = function(req,res){
-    if(req.body.password != req.body.confirm_password){
-        req.flash('error','Incorrect Password')
+module.exports.create = function (req, res) {
+    if (req.body.password != req.body.confirm_password) {
+        req.flash('error', 'Incorrect Password')
         return res.redirect('back')
     }
 
-    User.findOne({email: req.body.email},function(err,user){
-        if(err){
+    User.findOne({ email: req.body.email }, function (err, user) {
+        if (err) {
             console.log("error in finding user in signing up");
             return;
         }
         // console.log('find one -> ',user)
-        
-        if(!user){
+
+        if (!user) {
             User.create({
-                name : req.body.name,
-                email : req.body.email,
-                isAdmin : false,
-                password : req.body.password
-            },function(err,user){
-                if(err){
+                name: req.body.name,
+                email: req.body.email,
+                isAdmin: false,
+                password: req.body.password
+            }, function (err, user) {
+                if (err) {
                     console.log("error in creating user while signing up");
                     return;
                 }
                 // console.log('create -> ',user)
-                req.flash('success','Sign Up Successfull')
+                req.flash('success', 'Sign Up Successfull')
                 return res.redirect('/')
             })
-        }else{
+        } else {
             // console.log(user);
             return res.redirect('back');
         }
@@ -42,8 +42,8 @@ module.exports.create = function(req,res){
 
 
 
-module.exports.createSession = function(req, res){
-    req.flash('success','Logged In Successfully');
+module.exports.createSession = function (req, res) {
+    req.flash('success', 'Logged In Successfully');
     return res.redirect('/');
 }
 
@@ -68,14 +68,14 @@ module.exports.createSession = function(req, res){
 // }
 
 
-module.exports.destroySession= function(req, res, next) {
-    req.logout(function(err) {
-      if (err) { 
-        return next(err);
-     }
-     req.flash('success','Logged Out Successfully');
-    return res.redirect('/users/sign-in');
-    //   res.redirect('/');
+module.exports.destroySession = function (req, res, next) {
+    req.logout(function (err) {
+        if (err) {
+            return next(err);
+        }
+        req.flash('success', 'Logged Out Successfully');
+        return res.redirect('/users/sign-in');
+        //   res.redirect('/');
     });
     // req.flash('success','Logged Out Successfully');
 }
@@ -95,84 +95,91 @@ module.exports.destroySession= function(req, res, next) {
 //   });
 
 
-module.exports.signIn = function(req, res){
-    
-    if(req.isAuthenticated()){
+module.exports.signIn = function (req, res) {
+
+    if (req.isAuthenticated()) {
         return res.render('home', {
-            title : "Home"
+            title: "Home"
         });
     }
     return res.render('user_sign_in', {
-        title : "Login"
+        title: "Login"
     });
 }
 
 
 
-module.exports.signUp = function(req, res){
+module.exports.signUp = function (req, res) {
 
-    if(req.isAuthenticated() && req.user.isAdmin){
+    if (req.isAuthenticated() && req.user.isAdmin) {
         return res.render('user_sign_up', {
-            title : "Sign Up"
+            title: "Sign Up"
         });
     }
 
-    if(req.isAuthenticated()){
+    if (req.isAuthenticated()) {
         return res.render('home', {
-            title : "Home"
+            title: "Home"
         });
     }
-    
+
     return res.render('user_sign_up', {
-        title : "Sign Up"
+        title: "Sign Up"
     });
-    
+
 }
 
 // home
-module.exports.home = async function(req, res){
+module.exports.home = async function (req, res) {
 
     try {
-        if(!req.isAuthenticated()){
+        if (!req.isAuthenticated()) {
             return res.redirect('/users/sign-in');
         }
 
         let user = await User.findById(req.user.id);
-        let review = await Review.find({to : req.user.id});
-        
+        let review = await Review.find({ to: req.user.id });
+
 
         let recipients = [];
 
-        for(let i = 0; i < user.to.length; i++){
+        for (let i = 0; i < user.to.length; i++) {
             let x = await User.findById(user.to[i]);
-            recipients.push(x);
+            if (x) {
+                recipients.push({
+                    id: x._id, // Assuming 'x' has an '_id' property
+                    name: x.name
+                    // Add other properties if needed
+                });
+            }
         }
+
 
         // find reviews
         let reviews = [];
 
-        for(let i = 0; i < review.length; i++){
+        for (let i = 0; i < review.length; i++) {
             let x = await User.findById(review[i].from);
-            
+
 
             let curr_review = {
-                name : x.name,
-                review : review[i].review,
-                updated : review[i].updatedAt,
+                name: x.name,
+                review: review[i].review,
+                updated: review[i].updatedAt,
             };
             reviews.push(curr_review);
         }
 
         return res.render('home', {
-            title : "Home",
+            title: "Home",
             recipients: recipients,
             reviews: reviews,
-            user : user,
+            user: user,
         });
 
-    }catch(error) {
+    } catch (error) {
         console.log(error);
         return;
     }
-    
+
 }

@@ -1,42 +1,41 @@
 const mongoose = require('mongoose');
 
-// Define the schema for a user
+// Define the user schema
 const userSchema = new mongoose.Schema({
-
-    name : {
-        type : String,
-        required : true,
+    name: {
+        type: String,
+        required: true,
     },
-    email : {
-        type : String,
-        required : true,
+    email: {
+        type: String,
+        required: true,
     },
-    password : {
-        type : String,
-        required : true,
+    password: {
+        type: String,
+        required: true,
     },
-    isAdmin : {
-        type : Boolean,
-        required : true,
+    isAdmin: {
+        type: Boolean,
+        required: true,
     },
-    to : [     
+    to: [
         {
-            type : mongoose.Schema.Types.ObjectId,
-            ref : 'User', // Reference to other User documents, indicating to whom this user sends reviews
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User', // Reference to the User model
         }
     ],
-    from : [    
+    from: [
         {
-            type : mongoose.Schema.Types.ObjectId,
-            ref : 'Review', // Reference to Review documents, indicating reviews received by this user
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Review', // Reference to the Review model
         }
     ]
-
-},{
-    timestamps : true, // Adds timestamps for when the user document was created and updated
+}, {
+    timestamps: true, // Automatically add createdAt and updatedAt timestamps
 });
 
-// Create a model for the user schema
+// Create the User model using the schema
 const User = mongoose.model('User', userSchema);
 
-module.exports = User; // Export the User model
+// Export the User model for use in other parts of the application
+module.exports = User;
